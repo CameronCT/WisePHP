@@ -10,7 +10,7 @@ $dir_cache      = __DIR__ . '/cache';
 
 $Wise = new WisePHP($dir_templates, $dir_cache, false);
 
-$Title = 'My Site';
+$Title = 'Wise - Start templating wisely';
 $Wise->set('Title', $Title);
 
 $Wise->display('home'); 

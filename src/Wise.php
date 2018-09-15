@@ -20,16 +20,16 @@ class WisePHP {
             throw new Exception("You must specify a cache path!");
 
         if (!is_readable($templates_path))
-            throw new Exception("The templates path you have specified does not exist!");
+            throw new Exception("The templates path you have specified does not exist at $templates_path!");
             
         if (!is_readable($cache_path))
-            throw new Exception("The cache path you have specified does not exist!");
+            throw new Exception("The cache path you have specified does not exist at $cache_path!");
 
         if (!is_writeable($templates_path))
-            throw new Exception("Please change CHMOD to 777 for the templates path!");
+            throw new Exception("Please change CHMOD to 777 for the templates path at $templates_path!");
 
         if (!is_writeable($cache_path))
-            throw new Exception("Please change CHMOD to 777 for the cache path!");
+            throw new Exception("Please change CHMOD to 777 for the cache path at $cache_path!");
 
         $this->path = [
             'Templates' =>  $templates_path,
@@ -45,14 +45,15 @@ class WisePHP {
         return $this;
     }
 
+    public function ping() {
+        echo 'pong';
+    }
+
     public function set($key, $value) {
         $this->values[$key] = $value;
     }
 
-    public function parseBlocks($file) {
-        if (!file_exists($file) || !is_readable($file)) 
-            throw new Exception("Unable to read file " . $file . "!");
-
+    private function parseBlocks($file) {
         $output = file_get_contents($file);
 
         /*
@@ -60,7 +61,7 @@ class WisePHP {
         */
 
         // ![ - Extends
-        $replace       =        "/[[ @extends\("(\w+)"\) ]] as "(\w+)"/";
+        $replace       =        '/[[ @extends\("(\w+)"\) ]]/';
         $output        =        preg_replace($replace, $this->parse("$1"));
 
 
@@ -68,7 +69,7 @@ class WisePHP {
         return $output;
     }
 
-    public function parseVariables($file) {
+    private function parseVariables($file) {
         $output = file_get_contents($file);
 
         foreach ($this->values as $key => $value) {
@@ -89,15 +90,12 @@ class WisePHP {
 
             // $ - Output Safe String
             $replace    =       "[\$$key]";
-            $output     =       str_replace($replace, filter_var ($value, FILTER_SANITIZE_SPECIAL_CHARS);, $output);
+            $output     =       str_replace($replace, filter_var ($value, FILTER_SANITIZE_SPECIAL_CHARS), $output);
         }
         return $output;
     }
 
-    public function parse($file) {
-        if (!file_exists($file) || !is_readable($file)) 
-            throw new Exception("Unable to read file " . $file . "!");
-
+    private function parse($file) {
         $output = true;
         $output .= $this->parseBlocks($file);
         $output .= $this->parseVariables($file);
@@ -105,11 +103,16 @@ class WisePHP {
     }
 
     public function display($file) {
+        $getPath = $this->path['Templates'] . DIRECTORY_SEPARATOR . $file . '.html';
 
+        if (!file_exists($getPath) || !is_readable($getPath)) 
+            throw new Exception("Unable to read file " . $getPath . "!");
+
+        $output = "";
         if (!$this->config['Cache']['Enabled']) {
             ob_start();
-            $this->parse($file);
-            ob_end_clean();
+            $output = $this->parse($getPath);
+            ob_end_flush();
         }
         return $output;
     }

@@ -9,7 +9,7 @@ class WisePHP {
 
     protected $path;
     protected $config;
-    protected $values;
+    protected $values = array();
 
     public function __construct($templates_path, $cache_path, $cache = true, $cache_refresh = 60) {
 
@@ -53,26 +53,12 @@ class WisePHP {
         $this->values[$key] = $value;
     }
 
-    private function parseBlocks($file) {
-        $output = file_get_contents($file);
-
-        /*
-        *      Templating Extends
-        */
-
-        // ![ - Extends
-        $replace       =        '/[[ @extends\("(\w+)"\) ]]/';
-        $output        =        preg_replace($replace, $this->parse("$1"));
-
-
-
-        return $output;
-    }
-
     private function parseVariables($file) {
-        $output = file_get_contents($file);
 
-        foreach ($this->values as $key => $value) {
+        $output = file_get_contents($file);
+        
+
+        foreach ($this->values AS $key => $value) {
             /*
             *      Templating Variables
             */
@@ -86,7 +72,7 @@ class WisePHP {
 
             // # - Number Format 
             $replace    =       "[#$key]";
-            $output     =       str_replace($replace, (int) number_format($value), $output);
+            $output     =       str_replace($replace, number_format((int) $value), $output);
 
             // $ - Output Safe String
             $replace    =       "[\$$key]";
@@ -95,10 +81,18 @@ class WisePHP {
         return $output;
     }
 
+    private function parseExtends($file) {
+        $output = file_get_contents($file);
+        
+        echo preg_replace_callback('/\[\[ @append \"[A-Za-z0-9_.\/\\\\ ]+" \]\]/', function($matches) {
+            $name = explode('"', $matches[0])[1];
+            return $this->display($name) . '__EXTENDS__';
+        }, $output);
+    }
+
     private function parse($file) {
-        $output = true;
-        $output .= $this->parseBlocks($file);
-        $output .= $this->parseVariables($file);
+        $output = $this->parseExtends($file);
+        $output = $this->parseVariables($file);
         return $output;
     }
 
@@ -109,12 +103,10 @@ class WisePHP {
             throw new Exception("Unable to read file " . $getPath . "!");
 
         $output = "";
-        if (!$this->config['Cache']['Enabled']) {
-            ob_start();
-            $output = $this->parse($getPath);
-            ob_end_flush();
-        }
-        return $output;
+        $output = $this->parse($getPath);
+
+        echo $output;
     }
+    
 
 }

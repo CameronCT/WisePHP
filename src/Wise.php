@@ -56,12 +56,14 @@ class WisePHP {
         $output = file_get_contents($file);
 
         /*
-        *      Templating Blocks
+        *      Templating Extends
         */
 
         // ![ - Extends
-        $replace       =        "/[[ @extends\("(\w+)"\) ]]/";
-        $output        =        preg_replace($replace, $this->$output);
+        $replace       =        "/[[ @extends\("(\w+)"\) ]] as "(\w+)"/";
+        $output        =        preg_replace($replace, $this->parse("$1"));
+
+
 
         return $output;
     }

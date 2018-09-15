@@ -53,10 +53,17 @@ class WisePHP {
         $this->values[$key] = $value;
     }
 
-    private function parseVariables($file) {
+    private function getTemplateFile($file) {
+        return $this->path['Templates'] . DIRECTORY_SEPARATOR . $file . '.html';
+    }
 
+    private function parse($file) {
         $output = file_get_contents($file);
-        
+
+        preg_replace_callback('/\[\[ @append \"[A-Za-z0-9_.\/\\\\ ]+" \]\]/', function($matches) {
+            $name = explode('"', $matches[0])[1];
+            return $this->display($name);
+        }, $output);
 
         foreach ($this->values AS $key => $value) {
             /*
@@ -81,29 +88,11 @@ class WisePHP {
         return $output;
     }
 
-    private function parseExtends($file) {
-        $output = file_get_contents($file);
-        
-        echo preg_replace_callback('/\[\[ @append \"[A-Za-z0-9_.\/\\\\ ]+" \]\]/', function($matches) {
-            $name = explode('"', $matches[0])[1];
-            return $this->display($name) . '__EXTENDS__';
-        }, $output);
-    }
-
-    private function parse($file) {
-        $output = $this->parseExtends($file);
-        $output = $this->parseVariables($file);
-        return $output;
-    }
-
     public function display($file) {
-        $getPath = $this->path['Templates'] . DIRECTORY_SEPARATOR . $file . '.html';
+        if (!file_exists($this->getTemplateFile($file)) || !is_readable($this->getTemplateFile($file))) 
+            throw new Exception("Unable to read file " . $this->getTemplateFile($file) . "!");
 
-        if (!file_exists($getPath) || !is_readable($getPath)) 
-            throw new Exception("Unable to read file " . $getPath . "!");
-
-        $output = "";
-        $output = $this->parse($getPath);
+        $output = $this->parse($this->getTemplateFile($file));
 
         echo $output;
     }

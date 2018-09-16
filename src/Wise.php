@@ -45,16 +45,20 @@ class WisePHP {
         return $this;
     }
 
-    public function ping() {
-        echo 'pong';
-    }
-
     public function set($key, $value) {
         $this->values[$key] = $value;
     }
 
     private function getTemplateFile($file) {
         return $this->path['Templates'] . DIRECTORY_SEPARATOR . $file . '.html';
+    }
+
+    private function getCacheFile($file) {
+        return $this->path['Cache'] . DIRECTORY_SEPARATOR . $file . '.wise';
+    }
+
+    private function isCached($file) {
+        return (file_exists($this->getCacheFile($file)));
     }
 
     private function parse($file) {
@@ -65,7 +69,7 @@ class WisePHP {
 
         $output = preg_replace_callback('/\[\[ @append \"[A-Za-z0-9-_.\/\\\\ ]+" \]\]/', function($matches) {
             $name = explode('"', $matches[0])[1];
-            return "__APPEND_$name\__" . $this->parse($this->getTemplateFile($name)) . "__APPEND_$name\-END__";
+            return $this->parse($this->getTemplateFile($name));
         }, $output);
 
         foreach ($this->values AS $key => $value) {
@@ -91,13 +95,33 @@ class WisePHP {
         return $output;
     }
 
+    private function cache($file) {
+
+    }
+
     public function display($file) {
-        if (!file_exists($this->getTemplateFile($file)) || !is_readable($this->getTemplateFile($file))) 
-            throw new Exception("Unable to read file " . $this->getTemplateFile($file) . "!");
 
-        $output = $this->parse($this->getTemplateFile($file));
+        $getFile = $this->getTemplateFile($file);
 
-        echo $output;
+        if (!file_exists($getFile) || !is_readable($getFile)) 
+            throw new Exception("Unable to read file " . $getFile . "!");
+
+        if ($this->config['Cache']['Enabled']) {
+            if ($this->isCached($getFile) && time() - $this->config['Cache']['Refresh'] <= filemtime($this->getCacheFile($file))) {
+                clearstatcache();
+                ob_start();
+                readfile($this->getCacheFile($file));
+                ob_end_flush();
+                exit;
+            } elseif (!$this->isCached($getFile) || time() - $this->config['Cache']['Refresh'] > filemtime($this->getCacheFile($file))) {
+                $this->cache($this->parse($getFile));
+                exit;
+            }
+        } elseif (!$this->config['Cache']['Enabled']) {
+            $output = $this->parse($getFile);
+            echo $output;
+            exit;
+        }
     }
     
 

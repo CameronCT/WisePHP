@@ -82,16 +82,30 @@ class WisePHP {
         }, $output);
 
         foreach ($this->values AS $key => $value) {
+
+            if (!isset($key))
+                return false;
+
             /*
             *      Templating Variables
             */
             // ! - Replace Strings
-            $replace    =       "[!$key]";
-            $output     =       str_replace($replace, $value, $output);
+            if (!is_array($value)) {
+                $replace    =       "[!$key]";
+                $output     =       str_replace($replace, $value, $output);
+            }
 
-            // @ - Replace Functions
-            $replace    =       "[@$key]";
-            $output     =       str_replace($replace, $value, $output);
+            // @ - Replace Variables
+            if (is_array($key)) {
+                $replace    =       "[@$key]";
+                $output     =       str_replace($replace, $value, $output);
+            } else {
+                $replace    =       "[@$key.(.*?)]";
+                $output     =       preg_replace_callback('/\[@' . $key . '.(.*?)\]/', function($matches) use (&$value) {
+                    $array = $matches[1];
+                    return $value[$array];   
+                }, $output);
+            }
 
             // # - Number Format 
             $replace    =       "[#$key]";

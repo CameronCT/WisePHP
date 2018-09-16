@@ -8,8 +8,14 @@ require_once(__DIR__ . '/src/Wise.php');
 $dir_templates  = __DIR__ . '/views';
 $dir_cache      = __DIR__ . '/cache';
 
-$Wise = new WisePHP($dir_templates, $dir_cache, true, 30);
+$Wise = new WisePHP($dir_templates, $dir_cache, false, 30);
 
-$Title = 'Wise - Start templating wisely';
-$Wise->set('Title', $Title);
+
+$config = [
+    'Title' =>  'WisePHP',
+    'Slogan' => 'Start templating wisely'
+];
+
+$Wise->set('Config', $config);
+$Wise->set('SiteURL', 'github.com/CameronCT/WisePHP');
 $Wise->display('home'); 

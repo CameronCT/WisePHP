@@ -1,40 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Wise - Start templating wisely</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css" />
+        [[ @append "layout/head" ]]
     </head>
     <body>
-        <nav class="navbar is-dark">
-    <div class="navbar-brand">
-        <a class="navbar-item" href="#">
-            Wise - Start templating wisely2
-        </a>
-        <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
-    <span></span>
-    <span></span>
-    <span></span>
-</div>
-    </div>
-    
-    <div id="navbarExampleTransparentExample" class="navbar-menu">
-    
-        <div class="navbar-end">
-            <div class="navbar-item">
-                <div class="field is-grouped">
-                    <p class="control">
-                        <a class="button is-primary" href="https://github.com/CameronCT/WisePHP">
-                        <span>Repo</span>
-                        </a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>
+        
+        [[ @append "layout/nav" ]]
 
         <section class="hero is-large is-primary is-bold">
             <div class="hero-body">
@@ -43,7 +14,7 @@
                         Wise - Start templating wisely
                     </h1>
                     <h2 class="subtitle">
-                        View our project at github.com/CameronCT/WisePHP!
+                        View our project at [!SiteURL]!
                     </h2>
                 </div>
             </div>

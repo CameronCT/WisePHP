@@ -48,6 +48,10 @@ class WisePHP {
         return $this;
     }
 
+    public function debug() {
+        return $this;
+    }
+
     public function set($key, $value) {
         $this->values[$key] = $value;
     }
@@ -58,7 +62,7 @@ class WisePHP {
 
     private function getCacheFile($file) {
         $loc    = hash('sha256', $file . $this->session);
-        $path   = $this->path['Cache'] . DIRECTORY_SEPARATOR . $loc . '.wise'
+        $path   = $this->path['Cache'] . DIRECTORY_SEPARATOR . $loc . '.wise';
         return $path;
     }
 
@@ -125,12 +129,14 @@ class WisePHP {
                 ob_end_flush();
                 exit;
             } elseif (!$this->isCached($getFile) || time() - $this->config['Cache']['Refresh'] > filemtime($getCache)) {
-                $this->cache($getFile, $this->parse($getFile));
+                $this->cache($getCache, $this->parse($getFile));
                 exit;
             }
         } elseif (!$this->config['Cache']['Enabled']) {
+            ob_start();
             $output = $this->parse($getFile);
             echo $output;
+            ob_end_flush();
             exit;
         }
     }

@@ -9,6 +9,7 @@ class WisePHP {
 
     protected $path;
     protected $config;
+    protected $session;
     protected $values = array();
 
     public function __construct($templates_path, $cache_path, $cache = true, $cache_refresh = 60) {
@@ -42,6 +43,8 @@ class WisePHP {
                 'Refresh'   =>  $cache_refresh
             ]
         ];
+
+        $this->session = session_id();
         return $this;
     }
 
@@ -54,7 +57,9 @@ class WisePHP {
     }
 
     private function getCacheFile($file) {
-        return $this->path['Cache'] . DIRECTORY_SEPARATOR . $file . '.wise';
+        $loc    = hash('sha256', $file . $this->session);
+        $path   = $this->path['Cache'] . DIRECTORY_SEPARATOR . $loc . '.wise'
+        return $path;
     }
 
     private function isCached($file) {
@@ -95,26 +100,32 @@ class WisePHP {
         return $output;
     }
 
-    private function cache($file) {
-
+    private function cache($file, $output) {
+        ob_start();
+        $fp = fopen($file, 'w');
+        fwrite($fp, $output);
+        fclose($fp);
+        echo $output;
+        ob_end_flush();
     }
 
     public function display($file) {
 
-        $getFile = $this->getTemplateFile($file);
+        $getFile        = $this->getTemplateFile($file);
+        $getCache       = $this->getCacheFile($file);
 
         if (!file_exists($getFile) || !is_readable($getFile)) 
             throw new Exception("Unable to read file " . $getFile . "!");
 
         if ($this->config['Cache']['Enabled']) {
-            if ($this->isCached($getFile) && time() - $this->config['Cache']['Refresh'] <= filemtime($this->getCacheFile($file))) {
+            if ($this->isCached($getFile) && time() - $this->config['Cache']['Refresh'] <= filemtime($getCache)) {
                 clearstatcache();
                 ob_start();
-                readfile($this->getCacheFile($file));
+                readfile($getCache);
                 ob_end_flush();
                 exit;
-            } elseif (!$this->isCached($getFile) || time() - $this->config['Cache']['Refresh'] > filemtime($this->getCacheFile($file))) {
-                $this->cache($this->parse($getFile));
+            } elseif (!$this->isCached($getFile) || time() - $this->config['Cache']['Refresh'] > filemtime($getCache)) {
+                $this->cache($getFile, $this->parse($getFile));
                 exit;
             }
         } elseif (!$this->config['Cache']['Enabled']) {

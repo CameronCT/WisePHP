@@ -58,11 +58,14 @@ class WisePHP {
     }
 
     private function parse($file) {
+        if (!file_exists($file) || !is_readable($file)) 
+            throw new Exception("Unable to read file " . $file . "!");
+
         $output = file_get_contents($file);
 
-        preg_replace_callback('/\[\[ @append \"[A-Za-z0-9_.\/\\\\ ]+" \]\]/', function($matches) {
+        $output = preg_replace_callback('/\[\[ @append \"[A-Za-z0-9-_.\/\\\\ ]+" \]\]/', function($matches) {
             $name = explode('"', $matches[0])[1];
-            return $this->display($name);
+            return "__APPEND_$name\__" . $this->parse($this->getTemplateFile($name)) . "__APPEND_$name\-END__";
         }, $output);
 
         foreach ($this->values AS $key => $value) {
